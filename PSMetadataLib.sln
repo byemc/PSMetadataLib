@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSMetadataLib", "PSMetadataLib\PSMetadataLib.csproj", "{22A922BB-2FE5-4A48-B6E4-9237E91738BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFOReader", "SFOReader\SFOReader.csproj", "{8906B757-1523-4D41-ACAF-351C3BFAF495}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{22A922BB-2FE5-4A48-B6E4-9237E91738BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22A922BB-2FE5-4A48-B6E4-9237E91738BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22A922BB-2FE5-4A48-B6E4-9237E91738BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22A922BB-2FE5-4A48-B6E4-9237E91738BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8906B757-1523-4D41-ACAF-351C3BFAF495}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8906B757-1523-4D41-ACAF-351C3BFAF495}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8906B757-1523-4D41-ACAF-351C3BFAF495}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8906B757-1523-4D41-ACAF-351C3BFAF495}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
