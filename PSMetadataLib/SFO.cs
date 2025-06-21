@@ -52,7 +52,6 @@ public class SfoFile
             offset += 0x02;
             var dataFormat = Misc.ReadUInt16(fs, start + offset);
             offset += 0x02;
-            Console.WriteLine($"Data format: {dataFormat}; Is int: {1028 == dataFormat}");
 
             var dataLength = Misc.ReadUInt32(fs, start + offset);
             offset += 0x04;

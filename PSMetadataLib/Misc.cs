@@ -31,23 +31,23 @@ public class Misc
         return Encoding.UTF8.GetString(buffer);
     }
 
+    // Reads a FileStream from `offset` until it finds a NUL byte, then returns everything it has read up to that point.
     public static string ReadNullTerminatedString(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin)
     {
         stream.Seek(offset, origin);
-        
-        /* TODO: Make this not suck
-            So the issue here is that im reading one byte at a time. */
-        byte lastByte = Convert.ToByte(stream.ReadByte());
-        List<byte> buffer = [];
-        
-        while (lastByte != 0x00)
+
+        var buffer = new byte[64];
+        var result = "";
+        while (stream.Read(buffer, 0, 64) > 0)
         {
-            buffer.Add(lastByte);
-            lastByte = Convert.ToByte(stream.ReadByte());
+            if (Encoding.UTF8.GetString(buffer).Contains('\0'))
+            {
+                result += Encoding.UTF8.GetString(buffer).Split('\0').FirstOrDefault() ?? "";
+                break;
+            }
+            result += Encoding.UTF8.GetString(buffer);
         }
-        
-        // If we're here, then we're at the end of the string.
-        var bytes = buffer.ToArray();
-        return Encoding.UTF8.GetString(bytes);
+
+        return result;
     }
 }
