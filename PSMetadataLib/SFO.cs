@@ -63,7 +63,7 @@ public class SfoFile
             
             if (1028 == dataFormat)
             {
-                var keyData = Convert.ToInt32(Misc.ReadUInt32(fs, Convert.ToInt32(dataTableStart + dataOffset)));
+                var keyData = Misc.ReadUInt32(fs, Convert.ToInt32(dataTableStart + dataOffset));
                 Entries.Add(keyName, keyData);
             }
             else

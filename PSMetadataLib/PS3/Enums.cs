@@ -1,0 +1,233 @@
+using System.ComponentModel;
+using System.Reflection;
+
+namespace PSMetadataLib.PS3;
+
+[Flags]
+public enum AttributeEnum : uint
+{
+    PSPRemotePlayV1 = 1<<0,
+    CopyProtected = 1<<0, // Save files
+    SubfolderEnabled = 1<<0, // Subfolders
+        
+    PSPExport = 1<<1,
+    PSPRemotePlayV2 = 1<<2,
+    XMBInGameForcedEnabled = 1<<3,
+    XMBInGameDisabled = 1<<4,
+    XMBInGameBackgroundMusic = 1<<5,
+    SystemVoiceChat = 1<<6, // dubious
+    PSVitaRemotePlay = 1<<7,
+    MoveControllerWarning = 1<<8,
+    NavigationControllerWarning = 1<<9,
+    PlayStationEyeWarning = 1<<10,
+    MoveCalibrationNotification = 1<<11,
+    Stereoscopic3DWarning = 1<<12,
+    InstallDisc = 1<<17,
+    InstallPackages = 1<<18,
+    GamePurchaseEnabled = 1<<20,
+    PCEngine = 1<<22,
+    LicenseLogoDisabled = 1<<23,
+    MoveControllerEnabled = 1<<24,
+    NeoGeo = PCEngine | 1<<27,
+}
+
+[Flags]
+public enum BootableEnum : uint
+{
+    NotBootable = 0,
+    Mode1 = 1<<0,
+    Mode2 = 1<<1
+}
+
+public enum LanguagesEnum : uint
+{
+    Japanese,
+    [Description("English (United States)")]
+    English,
+    French,
+    [Description("Spanish (Spain)")]
+    Spanish,
+    German,
+    Italian,
+    [Description("Portuguese (Portugal)")]
+    Portuguese,
+    Russian,
+    Korean,
+    [Description("Chinese (Traditional)")]
+    ChineseTraditional,
+    [Description("Chinese (Simplified)")]
+    ChineseSimplified,
+    Finnish,
+    Swedish,
+    Danish,
+    Norwegian,
+    Polish,
+    [Description("Portuguese (Brazil)")]
+    PortugueseBrazil,
+    [Description("English (United Kingdom)")]
+    EnglishUnitedKingdom,
+    Turkish,
+}
+
+[Flags]
+public enum SoundFormatEnum : uint
+{
+    [Description("LPCM 2.0")]
+    Stereo = 1<<0, // LPCM 2.0
+    [Description("LPCM 5.1")]
+    Surround = 1<<2, // LPCM 5.1 Surround
+    [Description("LPCM 7.1")]
+    Surround7 = 1<<3, // LPCM 7.1 Surriound
+    [Description("Dolby Digital 5.1")]
+    DolbyDigital = 1<<8 | 1<<1, // Dolby Digital 5.1 + 2 for some reason
+    [Description("Dolby Home Theatre 5.1")]
+    DTS = 1<<9 | 1<<1,
+        
+    All = Stereo | Surround | Surround7 | DolbyDigital | DTS,
+    LPCM = Stereo | Surround | Surround7
+}
+
+[Flags]
+public enum ResolutionEnum : uint
+{
+    [Description("480")]
+    NTSC = 1<<0,
+    [Description("576")]
+    PAL = 1<<1,
+    [Description("720")]
+    HD720 = 1<<2,
+    [Description("1080")]
+    HD1080 = 1<<3,
+    [Description("480 16:9")]
+    NTSCWidescreen = 1<<4,
+    [Description("576 16:9")]
+    PALWidescreen = 1<<5
+}
+
+public enum PS3ParamCategoryEnum : short
+{
+    // Content found on a Blu-ray disc
+    [ShortName("DG"), Description("Disc game")]
+    DiscGame,
+    [ShortName("AR")]
+    AutoinstallRoot,
+    [ShortName("DP")]
+    DiscPackages,
+    [ShortName("IP")]
+    InstallPackages,
+    [ShortName("TR")]
+    ThemeRoot,
+    [ShortName("VR")]
+    VideoRoot,
+    [ShortName("VI")]
+    VideoItem,
+    [ShortName("XR")]
+    ExtraRoot,
+    [ShortName("TI")]
+    ThemeItem,
+    [ShortName("DM")]
+    DiscMovie,
+    
+    // Content found on the hard drive.
+    [ShortName("AP"), Description("App: Photos")]
+    AppPhoto,
+    [ShortName("AM"), Description("App: Music")]
+    AppMusic,
+    [ShortName("AV"), Description("App: Video")]
+    AppVideo,
+    [ShortName("BV")]
+    BroadcastVideo,
+    [ShortName("AT"), Description("App: TV")]
+    AppTv,
+    [ShortName("WT")]
+    WebTv,
+    [ShortName("HD"), Description("HDD Game")]
+    HddGame,
+    [ShortName("CB")]
+    CellBe,
+    [ShortName("AS")]
+    AppStore,
+    [ShortName("HM"), Description("PlayStation Home")]
+    Home,
+    [ShortName("SF"), Description("PlayStation Store")]
+    StoreFrontend,
+    [ShortName("2G"), Description("PlayStation 2 game -- PS2 compatible PS3s only.")]
+    Ps2Game,
+    [ShortName("2P"), Description("PS2 Classics")]
+    Ps2Psn,
+    [ShortName("1P"), Description("PS1 Classics")]
+    Ps1Psn,
+    [ShortName("MN"), Description("PSP Minis")]
+    PspMinis,
+    [ShortName("PE"), Description("PSP Remasters")]
+    PspEmulator,
+    [ShortName("PP")]
+    Psp,
+    [ShortName("GD"), Description("Game Data")]
+    GameData,
+    [ShortName("2D"), Description("PS2 Data")]
+    Ps2Data,
+    [ShortName("SD")]
+    SaveData,
+    [ShortName("AM")]
+    MemoryStick
+}
+
+public class ShortNameAttribute(string shortName) : Attribute
+{
+    public readonly string ShortName = shortName;
+}
+
+public static class EnumExtensions
+{
+    public static string ToDescriptions(this Enum value)
+    {
+        var type = value.GetType();
+        var values = Enum.GetValues(type).Cast<Enum>();
+
+        var selectedFlags = values
+            .Where(value.HasFlag)
+            .Where(v => Convert.ToInt32(v) != 0).ToArray(); // Exclude 0 unless it's the only one
+
+        if (selectedFlags.Length == 0 && Convert.ToInt32(value) == 0)
+        {
+            // Handle 0 (e.g. None) explicitly if it's the only value
+            return value.GetDescription();
+        }
+
+        return string.Join(", ", selectedFlags.Select(v => v.GetDescription()));
+    }
+    
+    // jsut a copy of the last function lol
+    public static string ToShortNames(this Enum value)
+    {
+        var type = value.GetType();
+        var values = Enum.GetValues(type).Cast<Enum>();
+
+        var selectedFlags = values
+            .Where(value.HasFlag)
+            .Where(v => Convert.ToInt32(v) != 0).ToArray(); // Exclude 0 unless it's the only one
+
+        if (selectedFlags.Length == 0 && Convert.ToInt32(value) == 0)
+        {
+            // Handle 0 (e.g. None) explicitly if it's the only value
+            return value.GetShortName();
+        }
+
+        return string.Join(", ", selectedFlags.Select(v => v.GetShortName()));
+    }
+
+    private static string GetDescription(this Enum value)
+    {
+        var field = value.GetType().GetField(value.ToString());
+        var attr = field?.GetCustomAttribute<DescriptionAttribute>();
+        return attr?.Description ?? value.ToString();
+    }
+    
+    private static string GetShortName(this Enum value)
+    {
+        var field = value.GetType().GetField(value.ToString());
+        var attr = field?.GetCustomAttribute<ShortNameAttribute>();
+        return attr?.ShortName ?? value.ToString();
+    }
+}
