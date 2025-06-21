@@ -141,7 +141,7 @@ public enum PS3ParamCategoryEnum : short
     AppTv,
     [ShortName("WT")]
     WebTv,
-    [ShortName("HD"), Description("HDD Game")]
+    [ShortName("HG"), Description("HDD Game")]
     HddGame,
     [ShortName("CB")]
     CellBe,
@@ -167,7 +167,7 @@ public enum PS3ParamCategoryEnum : short
     GameData,
     [ShortName("2D"), Description("PS2 Data")]
     Ps2Data,
-    [ShortName("SD")]
+    [ShortName("SD"), Description("Save Data")]
     SaveData,
     [ShortName("AM")]
     MemoryStick
@@ -197,34 +197,15 @@ public static class EnumExtensions
 
         return string.Join(", ", selectedFlags.Select(v => v.GetDescription()));
     }
-    
-    // jsut a copy of the last function lol
-    public static string ToShortNames(this Enum value)
-    {
-        var type = value.GetType();
-        var values = Enum.GetValues(type).Cast<Enum>();
 
-        var selectedFlags = values
-            .Where(value.HasFlag)
-            .Where(v => Convert.ToInt32(v) != 0).ToArray(); // Exclude 0 unless it's the only one
-
-        if (selectedFlags.Length == 0 && Convert.ToInt32(value) == 0)
-        {
-            // Handle 0 (e.g. None) explicitly if it's the only value
-            return value.GetShortName();
-        }
-
-        return string.Join(", ", selectedFlags.Select(v => v.GetShortName()));
-    }
-
-    private static string GetDescription(this Enum value)
+    public static string GetDescription(this Enum value)
     {
         var field = value.GetType().GetField(value.ToString());
         var attr = field?.GetCustomAttribute<DescriptionAttribute>();
         return attr?.Description ?? value.ToString();
     }
     
-    private static string GetShortName(this Enum value)
+    public static string GetShortName(this Enum value)
     {
         var field = value.GetType().GetField(value.ToString());
         var attr = field?.GetCustomAttribute<ShortNameAttribute>();

@@ -83,17 +83,18 @@ public class PS3ParamSFO : SfoFile
 
             if (cat is null) return null;
 
-            try
-            {
-                return (PS3ParamCategoryEnum)typeof(PS3ParamCategoryEnum)
-                    .GetFields()
-                    .First(f => f.IsLiteral && cat == f.GetCustomAttribute<ShortNameAttribute>()!.ShortName)
-                    .GetRawConstantValue()!;
-            } catch (ArgumentNullException)
+            var matchedValue = typeof(PS3ParamCategoryEnum)
+                .GetFields()
+                .FirstOrDefault(f => f.IsLiteral && cat == f.GetCustomAttribute<ShortNameAttribute>()!.ShortName);
+
+            var unboxedValue = matchedValue?.GetRawConstantValue();
+
+            if (unboxedValue is null)
             {
                 return null;
             }
 
+            return (PS3ParamCategoryEnum)unboxedValue;
         }
         set
         {
@@ -102,7 +103,7 @@ public class PS3ParamSFO : SfoFile
                 Entries.Remove("CATEGORY"); return;
             }
 
-            Entries["CATEGORY"] = value.ToShortNames();
+            Entries["CATEGORY"] = value.GetShortName();
         }
     }
 
