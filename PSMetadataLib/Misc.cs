@@ -13,7 +13,7 @@ public class Misc
         return BitConverter.ToUInt32(buffer);
     }
     
-    public static uint ReadUInt16(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin)
+    public static ushort ReadUInt16(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin)
     {
         var buffer = new byte[2];
         stream.Seek(offset, origin);
@@ -48,6 +48,6 @@ public class Misc
         
         // If we're here, then we're at the end of the string.
         var bytes = buffer.ToArray();
-        return Encoding.ASCII.GetString(bytes);
+        return Encoding.UTF8.GetString(bytes);
     }
 }
