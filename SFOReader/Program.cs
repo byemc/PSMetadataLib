@@ -23,5 +23,5 @@ SfoFile sfo = new(sfoPath);
 
 foreach (var sfoEntry in sfo.Entries)
 {
-    Console.WriteLine($"{sfoEntry.Key}\t{sfoEntry.Value}");
+    Console.WriteLine($"{sfoEntry.Key}\t{sfoEntry.Value}\t{sfoEntry.Value.GetType()}");
 }
