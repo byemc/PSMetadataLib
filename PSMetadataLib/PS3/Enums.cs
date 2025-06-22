@@ -39,36 +39,6 @@ public enum BootableEnum : uint
     Mode2 = 1<<1
 }
 
-public enum LanguagesEnum : uint
-{
-    Japanese,
-    [Description("English (United States)")]
-    English,
-    French,
-    [Description("Spanish (Spain)")]
-    Spanish,
-    German,
-    Italian,
-    [Description("Portuguese (Portugal)")]
-    Portuguese,
-    Russian,
-    Korean,
-    [Description("Chinese (Traditional)")]
-    ChineseTraditional,
-    [Description("Chinese (Simplified)")]
-    ChineseSimplified,
-    Finnish,
-    Swedish,
-    Danish,
-    Norwegian,
-    Polish,
-    [Description("Portuguese (Brazil)")]
-    PortugueseBrazil,
-    [Description("English (United Kingdom)")]
-    EnglishUnitedKingdom,
-    Turkish,
-}
-
 [Flags]
 public enum SoundFormatEnum : uint
 {
@@ -171,44 +141,4 @@ public enum PS3ParamCategoryEnum : short
     SaveData,
     [ShortName("AM")]
     MemoryStick
-}
-
-public class ShortNameAttribute(string shortName) : Attribute
-{
-    public readonly string ShortName = shortName;
-}
-
-public static class EnumExtensions
-{
-    public static string ToDescriptions(this Enum value)
-    {
-        var type = value.GetType();
-        var values = Enum.GetValues(type).Cast<Enum>();
-
-        var selectedFlags = values
-            .Where(value.HasFlag)
-            .Where(v => Convert.ToInt32(v) != 0).ToArray(); // Exclude 0 unless it's the only one
-
-        if (selectedFlags.Length == 0 && Convert.ToInt32(value) == 0)
-        {
-            // Handle 0 (e.g. None) explicitly if it's the only value
-            return value.GetDescription();
-        }
-
-        return string.Join(", ", selectedFlags.Select(v => v.GetDescription()));
-    }
-
-    public static string GetDescription(this Enum value)
-    {
-        var field = value.GetType().GetField(value.ToString());
-        var attr = field?.GetCustomAttribute<DescriptionAttribute>();
-        return attr?.Description ?? value.ToString();
-    }
-    
-    public static string GetShortName(this Enum value)
-    {
-        var field = value.GetType().GetField(value.ToString());
-        var attr = field?.GetCustomAttribute<ShortNameAttribute>();
-        return attr?.ShortName ?? value.ToString();
-    }
 }
