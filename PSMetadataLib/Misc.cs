@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Numerics;
 using System.Text;
 
 namespace PSMetadataLib;
