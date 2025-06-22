@@ -1,4 +1,4 @@
-﻿// Quick lil sample program that takes an SFO file as an argument
+﻿// Quick lil sample program that takes an SFO file as an argument and dumps out a table of information.
 
 using PSMetadataLib;
 
@@ -21,7 +21,20 @@ if (!Path.Exists(sfoPath))
 // Open the SFO file.
 SfoFile sfo = new(sfoPath);
 
-foreach (var sfoEntry in sfo.Entries)
+Console.BackgroundColor = ConsoleColor.Blue;
+Console.ForegroundColor = ConsoleColor.Yellow;
+Console.WriteLine($"{"KEY",20}\t{"Value",-50}");
+Console.ResetColor();
+foreach (var key in sfo.Entries.Keys)
 {
-    Console.WriteLine($"{sfoEntry.Key}\t{sfoEntry.Value}\t{sfoEntry.Value.GetType()}");
+    var value = sfo.Entries.GetValueOrDefault(key)?.ToString();
+
+    if (value is not null)
+    {
+        if (value.Length > 50) value = value[..38] + " [truncated]";
+    }
+    
+    Console.Write(
+        $"{key,20}\t{value,-50}");
+    Console.Write("\n");
 }

@@ -6,34 +6,83 @@ namespace PSMetadataLib;
 
 internal class BadMagicSignatureException(string message) : Exception(message);
 
-internal enum ParaDataFormatEnum : ushort
+public enum ParamDataFormatEnum : ushort
 {
-    None,
-    UTF8S = 0x0400,
+    UTF8S = 4,
     UTF8 = 516,
     INT32 = 1028,
+}
+
+public class SFOParamValue
+{
+    public object Value;
+    public ParamDataFormatEnum Format;
+
+    public SFOParamValue(string value, bool special = false)
+    {
+        Value = value;
+        Format = special ? ParamDataFormatEnum.UTF8S : ParamDataFormatEnum.UTF8;
+    }
+
+    public SFOParamValue(uint value)
+    {
+        Value = value;
+        Format = ParamDataFormatEnum.INT32;
+    }
+    
+    public SFOParamValue(int value)
+    {
+        Value = (uint)value;
+        Format = ParamDataFormatEnum.INT32;
+    }
+
+    public override string ToString()
+    {
+        return Value.ToString() ?? base.ToString() ?? "";
+    }
+
+    public static implicit operator SFOParamValue(string value)
+    {
+        return new SFOParamValue(value);
+    }
+    public static implicit operator SFOParamValue(int value)
+    {
+        return new SFOParamValue(value);
+    }
+    public static implicit operator SFOParamValue(uint value)
+    {
+        return new SFOParamValue(value);
+    }
 }
 
 public class SfoFile
 {
     protected int Length { get; private set; } = 0;
-    public Dictionary<string, object> Entries { get; private set; } = [];
+    public Dictionary<string, SFOParamValue> Entries { get; private set; } = [];
 
     private byte[] MagicSignature = "\0PSF"u8.ToArray(); // This is what's expected to be in the header.
     
-    protected void SaveValueToEntries(string key, object? value)
+    protected void SaveValueToEntries(string key, SFOParamValue? value)
     {
         // Saves a value to Entries, or deletes it if "value" is null.
 
         if (value is null) Entries.Remove(key);
         else Entries[key] = value;
     }
+    
+    protected void SaveBoolToEntries(string key, bool? value)
+    {
+        // Saves a bool as uint to Entries, or deletes it if "value" is null.
 
-    protected void SaveStringToEntries(string key, string? value, Func<string, bool>? lengthConstraint = null, string? exceptionMessage = "")
+        if (value is null) Entries.Remove(key);
+        else Entries[key] = Convert.ToUInt32(value);
+    }
+
+    protected void SaveStringToEntries(string key, string? value, Func<string, bool>? lengthConstraint = null, string? exceptionMessage = "", bool special = false)
     {
         if (value is not null)
         {
-            if (lengthConstraint?.Invoke(value) ?? true) Entries[key] = value;
+            if (lengthConstraint?.Invoke(value) ?? true) Entries[key] = new SFOParamValue(value, special);
             else throw new ConstraintException(exceptionMessage ?? $"{key} failed to meet constraints");
         }
         else
@@ -54,7 +103,7 @@ public class SfoFile
     {
         var magic = new byte[4];
 
-        using var fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
                                                                                 // ^^ Allows other processes to read this file, but not write.
         // Check that the file is an SFO file.
         fs.ReadExactly(magic, 0, 4);
@@ -90,18 +139,22 @@ public class SfoFile
             var dataOffset = Misc.ReadUInt32(fs, start + offset);
             
             var keyName = Misc.ReadNullTerminatedString(fs, Convert.ToInt32(keyTableStart + keyOffset));
-            
-            if (1028 == dataFormat)
+
+            if ((ParamDataFormatEnum)dataFormat == ParamDataFormatEnum.INT32)
             {
                 var keyData = Misc.ReadUInt32(fs, Convert.ToInt32(dataTableStart + dataOffset));
                 Entries.Add(keyName, keyData);
             }
+            else if ((ParamDataFormatEnum)dataFormat == ParamDataFormatEnum.UTF8S)
+            {
+                var keyData1 = Misc.ReadNullTerminatedString(fs, Convert.ToInt32(dataTableStart + dataOffset));
+                Entries.Add(keyName, new SFOParamValue(keyData1, true));
+            }
             else
             {
                 var keyData = Misc.ReadNullTerminatedString(fs, Convert.ToInt32(dataTableStart + dataOffset));
-                Entries.Add(keyName, keyData);
+                Entries.Add(keyName, new SFOParamValue(keyData));
             }
-
         }
     }
 
@@ -113,8 +166,6 @@ public class SfoFile
         List<byte> header = [];
         header.AddRange(MagicSignature);
         header.AddRange([0x01, 0x01, 0x00, 0x00]);      // 1.01
-        uint keyTableStart;
-        uint dataTableStart;
         var tablesEntries = (uint)Length;
         
         // The tables
@@ -129,23 +180,27 @@ public class SfoFile
             List<byte> entry = [];
             
             List<byte> trueValue = [];
-            var dataFormat = ParaDataFormatEnum.None;
+            ParamDataFormatEnum dataFormat;
             
-            switch (value)
+            switch (value.Format)
             { 
                 // Turn the value into bytes
-                case uint valUint:
+                case ParamDataFormatEnum.INT32:
                 {
-                    trueValue.AddRange(BitConverter.GetBytes(valUint));
-                    dataFormat = ParaDataFormatEnum.INT32;
+                    trueValue.AddRange(BitConverter.GetBytes((uint)value.Value));
+                    dataFormat = ParamDataFormatEnum.INT32;
                     break;
                 }
-                case string valString:
+                case ParamDataFormatEnum.UTF8:
                 {
-                    trueValue.AddRange(Encoding.UTF8.GetBytes(valString + "\0"));
-                    dataFormat = ParaDataFormatEnum.UTF8;
+                    trueValue.AddRange(Encoding.UTF8.GetBytes((string)value.Value + "\0"));
+                    dataFormat = ParamDataFormatEnum.UTF8;
                     break;
                 }
+                case ParamDataFormatEnum.UTF8S:
+                    trueValue.AddRange(Encoding.UTF8.GetBytes((string)value.Value));
+                    dataFormat = ParamDataFormatEnum.UTF8;
+                    break;
                 default: // Ignore it
                     continue;
             }
@@ -169,19 +224,19 @@ public class SfoFile
             
             indexTable.AddRange(entry);                                        // Adds the entry to index_table.
         }
-        
+
         // Working out where the key table will start.
         // Header is a fixed size 0x14
         // header + index table should be it?
-        keyTableStart = 0x14 + (uint)indexTable.Count;
+        var keyTableStart = 0x14 + (uint)indexTable.Count;
         var keyTableEnd = (uint)(keyTableStart + keyTable.Count);
         var paddingNeeded = (uint)((Math.Ceiling(keyTableEnd / 4.0) * 4) - keyTableEnd);
         var padding = new byte[paddingNeeded];
         keyTable.AddRange(padding);
 
         // Data table starts after key table, with padding to align it to four bytes
-        dataTableStart = (uint)(keyTableStart + keyTable.Count);
-        
+        var dataTableStart = (uint)(keyTableStart + keyTable.Count);
+
         // Add these to the header
         header.AddRange(BitConverter.GetBytes(keyTableStart));
         header.AddRange(BitConverter.GetBytes(dataTableStart));

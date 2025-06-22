@@ -4,13 +4,14 @@ using System.Text;
 
 namespace PSMetadataLib;
 
-public class Misc
+public static class Misc
 {
     public static uint ReadUInt32(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin)
     {
         var buffer = new byte[4];
         stream.Seek(offset, origin);
         stream.ReadExactly(buffer);
+        if (!BitConverter.IsLittleEndian) Array.Reverse(buffer);
         return BitConverter.ToUInt32(buffer);
     }
     
@@ -19,6 +20,7 @@ public class Misc
         var buffer = new byte[2];
         stream.Seek(offset, origin);
         stream.ReadExactly(buffer);
+        if (!BitConverter.IsLittleEndian) Array.Reverse(buffer);
         return BitConverter.ToUInt16(buffer);
     }
     
