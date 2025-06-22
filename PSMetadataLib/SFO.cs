@@ -9,7 +9,6 @@ public class SfoFile
     public int Length { get; private set; } = 0;
     public Dictionary<string, object> Entries { get; private set; } = [];
 
-    public SfoFile()
     {
         
     }
@@ -19,7 +18,7 @@ public class SfoFile
         Load(file);
     }
 
-    public void Load(string file)
+    protected void Load(string file)
     {
         var magic = new byte[4];
         var magicSignature = "\0PSF"u8.ToArray(); // This is what's expected to be in the header.
@@ -41,7 +40,7 @@ public class SfoFile
         // Seek to the start of the index table.
         fs.Seek(0x14, SeekOrigin.Begin);
 
-        for (int i = 0; i < Length; i++)
+        for (var i = 0; i < Length; i++)
         {
             var start = 0x14 + (0x10 * i);
             var offset = 0x00;

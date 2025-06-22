@@ -1,5 +1,6 @@
-using System.Data;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using static System.Text.RegularExpressions.Regex;
 
 namespace PSMetadataLib.PS3;
 
@@ -10,7 +11,7 @@ namespace PSMetadataLib.PS3;
  */
 public class PS3ParamSFO : SfoFile
 {
-    /**
+   /**
      * Application version, represented as a string 5 characters long in the format "XX.YY"
      *
      * Parameter name is APP_VER
@@ -18,21 +19,11 @@ public class PS3ParamSFO : SfoFile
     public string? AppVer
     {
         get => (string?)Entries.GetValueOrDefault("APP_VER");
-        set
-        {
-            if (value is not { Length: 5 } && value is not null)
-            {
-                throw new ConstraintException("APP_VER must be 5 characters long.");
-            }
-
-            if (value is null)
-            {
-                Entries.Remove("APP_VER");
-                return;
-            }
-            Entries["APP_VER"] = value;
-        }
+        set => SaveStringToEntries("APP_VER", value, v => v.Length == 5 && IsMatch(v, _appVerRegex.Pattern),
+            "APP_KEY must be 5 characters long and in the format XX.YY.");
     }
+    private readonly GeneratedRegexAttribute _appVerRegex = new GeneratedRegexAttribute(@"/\d{2}[.]\d{2}/");
+
 
     /**
      * Flags effecting features of the content.
@@ -41,15 +32,7 @@ public class PS3ParamSFO : SfoFile
      */
     public AttributeEnum? Attribute { get => Entries.TryGetValue("ATTRIBUTE", out var attr)
             ? (AttributeEnum)attr : null;
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("ATTRIBUTE");
-                return;
-            }
-            Entries["ATTRIBUTE"] = (uint)value;
-        }
+        set => SaveValueToEntries("ATTRIBUTE", (uint?)value);
     }
 
     /**
@@ -59,16 +42,7 @@ public class PS3ParamSFO : SfoFile
      */
     public BootableEnum? Bootable { get => Entries.TryGetValue("BOOTABLE", out var bootable)
             ? (BootableEnum)bootable : null;
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("BOOTABLE");
-                return;
-            }
-
-            Entries["BOOTABLE"] = (uint)value;
-        }
+        set => SaveValueToEntries("BOOTABLE", (uint?)value);
     }
     
     /**
@@ -79,32 +53,27 @@ public class PS3ParamSFO : SfoFile
         get
         {
             var cat = Entries.TryGetValue("CATEGORY", out var o) 
-                ? (string)o : null;     // This is a string containing the value I'd like to find
+                ? (string)o : null;
 
-            if (cat is null) return null;
-
-            var matchedValue = typeof(PS3ParamCategoryEnum)
-                .GetFields()
-                .FirstOrDefault(f => f.IsLiteral && cat == f.GetCustomAttribute<ShortNameAttribute>()!.ShortName);
-
-            var unboxedValue = matchedValue?.GetRawConstantValue();
-
-            if (unboxedValue is null)
-            {
-                return null;
-            }
-
-            return (PS3ParamCategoryEnum)unboxedValue;
+            return cat is null ? null : MatchCategoryCodeToEnum(cat);
         }
-        set
+        set => SaveStringToEntries("CATEGORY", value?.GetShortName());
+    }
+    
+    public static PS3ParamCategoryEnum? MatchCategoryCodeToEnum(string shortCode)
+    {
+        var matchedValue = typeof(PS3ParamCategoryEnum)
+            .GetFields()
+            .FirstOrDefault(f => f.IsLiteral && shortCode == f.GetCustomAttribute<ShortNameAttribute>()!.ShortName);
+
+        var unboxedValue = matchedValue?.GetRawConstantValue();
+
+        if (unboxedValue is null)
         {
-            if (value is null)
-            {
-                Entries.Remove("CATEGORY"); return;
-            }
-
-            Entries["CATEGORY"] = value.GetShortName();
+            return null;
         }
+
+        return (PS3ParamCategoryEnum)unboxedValue;
     }
 
     /**
@@ -113,20 +82,8 @@ public class PS3ParamSFO : SfoFile
     public string? Detail
     {
         get => (string?)Entries.GetValueOrDefault("DETAIL");
-        set
-        {
-            switch (value)
-            {
-                case { Length: > 1023 }:
-                    throw new ConstraintException("DETAIL must be less than 1024 characters long.");
-                case null:
-                    Entries.Remove("DETAIL");
-                    break;
-                default:
-                    Entries["DETAIL"] = value;
-                    break;
-            }
-        }
+        set => SaveStringToEntries("DETAIL", value, s => s.Length <= 1023,
+            "DETAIL must be less than 1024 characters long.");
     }
 
     /**
@@ -137,16 +94,7 @@ public class PS3ParamSFO : SfoFile
     public uint? ItemPriority
     {
         get => (uint?)Entries.GetValueOrDefault("ITEM_PRIORITY");
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("ITEM_PRIORITY");
-                return;
-            }
-
-            Entries["ITEM_PRIORITY"] = value;
-        }
+        set => SaveValueToEntries("ITEM_PRIORITY", value);
     }
 
     /**
@@ -156,16 +104,7 @@ public class PS3ParamSFO : SfoFile
      */
     public LanguagesEnum? Lang { get => Entries.TryGetValue("LANG", out var bootable)
             ? (LanguagesEnum)bootable : null;
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("LANG");
-                return;
-            }
-
-            Entries["LANG"] = (uint)value;
-        }
+        set => SaveValueToEntries("LANG", value);
     }
     
     /**
@@ -176,20 +115,8 @@ public class PS3ParamSFO : SfoFile
     public string? License
     {
         get => (string?)Entries.GetValueOrDefault("LICENSE");
-        set
-        {
-            switch (value)
-            {
-                case { Length: > 511 }:
-                    throw new ConstraintException("LICENSE must be less than 511 characters long.");
-                case null:
-                    Entries.Remove("LICENSE");
-                    break;
-                default:
-                    Entries["LICENSE"] = value;
-                    break;
-            }
-        }
+        set => SaveStringToEntries("LICENSE", value, s => s.Length <= 511,
+            "LICENSE must be less than 512 characters long.");
     }
 
     /**
@@ -198,52 +125,29 @@ public class PS3ParamSFO : SfoFile
     public uint? ParentalLevel
     {
         get => (uint?)Entries.GetValueOrDefault("PARENTAL_LEVEL");
-        set
-        {
-            switch (value)
-            {
-                case null:
-                    Entries.Remove("PARENTAL_LEVEL");
-                    break;
-                default:
-                    Entries["PARENTAL_LEVEL"] = value;
-                    break;
-            }
-        }
+        set => SaveValueToEntries("PARENTAL_LEVEL", value);
     }
 
     /**
      * Defines what video modes content supports.
      */
-    public ResolutionEnum? Resolution { get => Entries.TryGetValue("RESOLUTION", out var bootable)
-        ? (ResolutionEnum)bootable : null;
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("RESOLUTION");
-                return;
-            }
-
-            Entries["RESOLUTION"] = (uint)value;
-        }
+    public ResolutionEnum? Resolution
+    {
+        get => Entries.TryGetValue("RESOLUTION", out var bootable)
+            ? (ResolutionEnum)bootable
+            : null;
+        set => SaveValueToEntries("RESOLUTION", value);
     }
 
     /**
      * Defines what sound modes the content supports
      */
-    public SoundFormatEnum? SoundFormat { get => Entries.TryGetValue("SOUND_FORMAT", out var bootable)
-            ? (SoundFormatEnum)bootable : null;
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("SOUND_FORMAT");
-                return;
-            }
-
-            Entries["SOUND_FORMAT"] = (uint)value;
-        }
+    public SoundFormatEnum? SoundFormat
+    {
+        get => Entries.TryGetValue("SOUND_FORMAT", out var bootable)
+            ? (SoundFormatEnum)bootable
+            : null;
+        set => SaveValueToEntries("SOUND_FORMAT", value);
     }
     
     /**
@@ -252,21 +156,8 @@ public class PS3ParamSFO : SfoFile
     public string? SubTitle
     {
         get => (string?)Entries.GetValueOrDefault("SUB_TITLE");
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("SUB_TITLE");
-            }
-            else if (value is not { Length: >= 128 })
-            {
-                Entries["SUB_TITLE"] = value;
-            }
-            else
-            {
-                throw new ConstraintException("SUB_TITLE must be less than 128 characters long.");
-            }
-        }
+        set => SaveStringToEntries("SUB_TITLE", value, s => s.Length < 128,
+            "SUB_TITLE must be less than 128 characters long.");
     }
     
     /**
@@ -276,44 +167,19 @@ public class PS3ParamSFO : SfoFile
     public string? Title
     {
         get => (string?)Entries.GetValueOrDefault("TITLE");
-        set
-        {
-            if (value is null)
-            {
-                Entries.Remove("TITLE");
-            }
-            else if (value is not { Length: >= 128 })
-            {
-                Entries["TITLE"] = value;
-            }
-            else
-            {
-                throw new ConstraintException("TITLE must be less than 128 characters long.");
-            }
-        }
+        set => SaveStringToEntries("TITLE", value, s => s.Length < 128,
+            "TITLE must be less than 128 characters long.");
     }
     
     /**
      * Title ID of the content. Max of 15 characters.
      */
-        public string? TitleId
-        {
-            get => (string?) Entries.GetValueOrDefault("TITLE_ID");
-            set
-            {
-                switch (value)
-                {
-                    case null:
-                        Entries.Remove("TITLE_ID");
-                        break;
-                    case { Length: < 16 }:
-                        throw new ConstraintException("TITLE_ID must be less than 16 characters long.");
-                    default:
-                        Entries["TITLE_ID"] = value;
-                        break;
-                }
-            }
-        }
+    public string? TitleId
+    {
+        get => (string?) Entries.GetValueOrDefault("TITLE_ID");
+        set => SaveStringToEntries("TITLE_ID", value, s => s.Length < 16,
+            "TITLE_ID must be less than 16 characters long.");
+    }
     
     /**
      * Create PS3ParamSFO file using information from a PARAM.SFO file given in `path`
