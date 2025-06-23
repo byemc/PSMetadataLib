@@ -1,11 +1,11 @@
 PSMetadataLib
-~~~~~~~~~~~~~
+=============
 
 PSMetadataLib is a work-in-progress library for parsing files related to metadata on PlayStation systems, currently focused on the PlayStation 3.
 
 The following is planned for the short term:
-- [ ] PlayStation 3 support
-    - [ ] Properly parse, modify and write PARAM.SFO files
+- [~] PlayStation 3 support
+    - [X] Properly parse, modify and write PARAM.SFO files
     - [ ] Properly parse, modify and write PS3_DISK.SFB files
     - [ ] Identify assets related to the current PARAM.SFO file.
         - [ ] Images (like PIC1.PNG, ICON0.PNG, etc)
