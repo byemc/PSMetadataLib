@@ -142,17 +142,19 @@ public class SfoFile
 
             if ((ParamDataFormatEnum)dataFormat == ParamDataFormatEnum.INT32)
             {
-                var keyData = Misc.ReadUInt32(fs, Convert.ToInt32(dataTableStart + dataOffset));
+                var keyData = Misc.ReadUInt32(fs, (int)dataTableStart + (int)dataOffset);
                 Entries.Add(keyName, keyData);
             }
             else if ((ParamDataFormatEnum)dataFormat == ParamDataFormatEnum.UTF8S)
             {
-                var keyData1 = Misc.ReadNullTerminatedString(fs, Convert.ToInt32(dataTableStart + dataOffset));
-                Entries.Add(keyName, new SFOParamValue(keyData1, true));
+                var keyDataBuffer = new byte[dataLength];
+                fs.Seek((int)dataTableStart + (int)dataOffset, SeekOrigin.Begin);
+                fs.ReadExactly(keyDataBuffer);
+                Entries.Add(keyName, new SFOParamValue(Encoding.UTF8.GetString(keyDataBuffer), true));
             }
             else
             {
-                var keyData = Misc.ReadNullTerminatedString(fs, Convert.ToInt32(dataTableStart + dataOffset));
+                var keyData = Misc.ReadNullTerminatedString(fs, (int)dataTableStart + (int)dataOffset);
                 Entries.Add(keyName, new SFOParamValue(keyData));
             }
         }
