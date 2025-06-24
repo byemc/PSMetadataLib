@@ -61,7 +61,7 @@ Console.WriteLine("PARAM.SFO contents: -----------------------------------------
 
 Console.BackgroundColor = ConsoleColor.Blue;
 Console.ForegroundColor = ConsoleColor.Yellow;
-Console.WriteLine($"{"KEY",20}\t{"Value",-50}");
+Console.WriteLine($"{"KEY",20}\t{"VALUE",-50}");
 Console.ResetColor();
 foreach (var key in param.Entries.Keys)
 {

@@ -17,23 +17,34 @@ public class SFOParamValue
 {
     public object Value;
     public ParamDataFormatEnum Format;
+    public int? MaxLength;
 
-    public SFOParamValue(string value, bool special = false)
+    public SFOParamValue(string value, bool special = false, int? maxLength = null)
     {
         Value = value;
         Format = special ? ParamDataFormatEnum.UTF8S : ParamDataFormatEnum.UTF8;
+        if (maxLength is not null) MaxLength = maxLength;
     }
 
     public SFOParamValue(uint value)
     {
         Value = value;
         Format = ParamDataFormatEnum.INT32;
+        MaxLength = 0x4;
     }
     
     public SFOParamValue(int value)
     {
         Value = (uint)value;
         Format = ParamDataFormatEnum.INT32;
+        MaxLength = 0x4;
+    }
+
+    public SFOParamValue(SFOParamValue value)
+    {
+        Value = value.Value;
+        Format = value.Format;
+        MaxLength = value.MaxLength;
     }
 
     public override string ToString()
@@ -60,7 +71,7 @@ public class SfoFile
     protected int Length { get; private set; } = 0;
     public Dictionary<string, SFOParamValue> Entries { get; private set; } = [];
 
-    private byte[] MagicSignature = "\0PSF"u8.ToArray(); // This is what's expected to be in the header.
+    private readonly byte[] _magicSignature = "\0PSF"u8.ToArray(); // This is what's expected to be in the header.
     
     protected void SaveValueToEntries(string key, SFOParamValue? value)
     {
@@ -78,11 +89,11 @@ public class SfoFile
         else Entries[key] = Convert.ToUInt32(value);
     }
 
-    protected void SaveStringToEntries(string key, string? value, Func<string, bool>? lengthConstraint = null, string? exceptionMessage = "", bool special = false)
+    protected void SaveStringToEntries(string key, string? value, Func<string, bool>? lengthConstraint = null, string? exceptionMessage = "", bool special = false, int? maxLength = null)
     {
         if (value is not null)
         {
-            if (lengthConstraint?.Invoke(value) ?? true) Entries[key] = new SFOParamValue(value, special);
+            if (lengthConstraint?.Invoke(value) ?? true) Entries[key] = new SFOParamValue(value, special, maxLength);
             else throw new ConstraintException(exceptionMessage ?? $"{key} failed to meet constraints");
         }
         else
@@ -106,8 +117,8 @@ public class SfoFile
         using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
                                                                                 // ^^ Allows other processes to read this file, but not write.
         // Check that the file is an SFO file.
-        fs.ReadExactly(magic, 0, 4);
-        if (!magic.SequenceEqual(MagicSignature))
+        fs.ReadExactly(magic);
+        if (!magic.SequenceEqual(_magicSignature))
         {
             throw new BadMagicSignatureException("File passed into SFO parser is not a valid SFO file. (Header doesn't match)");
         }
@@ -150,12 +161,12 @@ public class SfoFile
                 var keyDataBuffer = new byte[dataLength];
                 fs.Seek((int)dataTableStart + (int)dataOffset, SeekOrigin.Begin);
                 fs.ReadExactly(keyDataBuffer);
-                Entries.Add(keyName, new SFOParamValue(Encoding.UTF8.GetString(keyDataBuffer), true));
+                Entries.Add(keyName, new SFOParamValue(Encoding.UTF8.GetString(keyDataBuffer), true, maxLength:(int)dataMaxLength));
             }
             else
             {
                 var keyData = Misc.ReadNullTerminatedString(fs, (int)dataTableStart + (int)dataOffset);
-                Entries.Add(keyName, new SFOParamValue(keyData));
+                Entries.Add(keyName, new SFOParamValue(keyData, maxLength:(int)dataMaxLength));
             }
         }
     }
@@ -166,7 +177,7 @@ public class SfoFile
         
         // Header
         List<byte> header = [];
-        header.AddRange(MagicSignature);
+        header.AddRange(_magicSignature);
         header.AddRange([0x01, 0x01, 0x00, 0x00]);      // 1.01
         var tablesEntries = (uint)Length;
         
@@ -208,7 +219,7 @@ public class SfoFile
             }
             
             var dataLength = (uint)trueValue.Count;
-            var dataMaxLength = BitOperations.RoundUpToPowerOf2(dataLength);
+            var dataMaxLength = (uint?)value.MaxLength ?? BitOperations.RoundUpToPowerOf2(dataLength);
             
             entry.AddRange(BitConverter.GetBytes((ushort)keyTableOffset));  // Adds key_offset
             entry.AddRange(BitConverter.GetBytes((ushort)dataFormat));      // Adds data_fmt

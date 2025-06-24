@@ -42,7 +42,7 @@ public class PS3ParamSFO : SfoFile
     {
         get => (string?)Entries.GetValueOrDefault("APP_VER")?.Value;
         set => SaveStringToEntries("APP_VER", value, v => v.Length == 5 && IsMatch(v, _appVerRegex.Pattern),
-            "APP_KEY must be 5 characters long and in the format XX.YY.");
+            "APP_KEY must be 5 characters long and in the format XX.YY.", maxLength:0x8);
     }
     private readonly GeneratedRegexAttribute _appVerRegex = new GeneratedRegexAttribute(@"/\d{2}[.]\d{2}/");
 
@@ -79,7 +79,7 @@ public class PS3ParamSFO : SfoFile
 
             return cat is null ? null : MatchCategoryCodeToEnum(cat);
         }
-        set => SaveStringToEntries("CATEGORY", value?.GetShortName());
+        set => SaveStringToEntries("CATEGORY", value?.GetShortName(), maxLength:0x4);
     }
     
     public static PS3ParamCategoryEnum? MatchCategoryCodeToEnum(string shortCode)
@@ -264,7 +264,7 @@ public class PS3ParamSFO : SfoFile
     {
         get => (string?)Entries.GetValueOrDefault("TITLE")?.Value;
         set => SaveStringToEntries("TITLE", value, s => s.Length < 128,
-            "TITLE must be less than 128 characters long.");
+            "TITLE must be less than 128 characters long.", maxLength:0x080);
     }
     
     /**
