@@ -1,6 +1,7 @@
 ﻿// Quick lil sample program that takes an SFO file as an argument and dumps out a table of information.
 
 using PSMetadataLib;
+using PSMetadataLib.Filetypes;
 
 if (string.IsNullOrWhiteSpace(args.FirstOrDefault()))
 {
