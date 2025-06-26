@@ -4,6 +4,23 @@ using System.Reflection;
 namespace PSMetadataLib.PS3;
 
 [Flags]
+public enum HybridFlagEnum : uint
+{
+    [Description("Disc Benefits"), ShortName("S")]
+    DiscBenefits = 1U<<0,
+    [ShortName("T")]
+    Themes,
+    [ShortName("V")]
+    Video,
+    [ShortName("g"), Description("Disc Game & Disc Extra Contents")]
+    DiscGame,
+    [ShortName("u"), Description("Firmware update")]
+    FirmwareUpdate,
+    [ShortName("v"), Description("Blu-ray Movie")]
+    BluRayMovie
+}
+
+[Flags]
 public enum AttributeEnum : uint
 {
     PSPRemotePlayV1 = 1<<0,

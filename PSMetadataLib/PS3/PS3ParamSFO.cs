@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
+using PSMetadataLib.Filetypes;
 using static System.Text.RegularExpressions.Regex;
 
 namespace PSMetadataLib.PS3;

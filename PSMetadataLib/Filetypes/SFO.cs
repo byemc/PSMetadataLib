@@ -2,7 +2,7 @@
 using System.Numerics;
 using System.Text;
 
-namespace PSMetadataLib;
+namespace PSMetadataLib.Filetypes;
 
 internal class BadMagicSignatureException(string message) : Exception(message);
 
