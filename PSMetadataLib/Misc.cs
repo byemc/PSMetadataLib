@@ -4,23 +4,41 @@ using System.Text;
 
 namespace PSMetadataLib;
 
+public enum Endian
+{
+    Little,
+    Big
+}
+
 public static class Misc
 {
-    public static uint ReadUInt32(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin)
+    public static uint ReadUInt32(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin, Endian endian = Endian.Little)
     {
         var buffer = new byte[4];
         stream.Seek(offset, origin);
         stream.ReadExactly(buffer);
-        if (!BitConverter.IsLittleEndian) Array.Reverse(buffer);
+        switch (BitConverter.IsLittleEndian)
+        {
+            case false when endian.Equals(Endian.Little):
+            case true when endian.Equals(Endian.Big):
+                Array.Reverse(buffer);
+                break;
+        }
         return BitConverter.ToUInt32(buffer);
     }
     
-    public static ushort ReadUInt16(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin)
+    public static ushort ReadUInt16(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin, Endian endian = Endian.Little)
     {
         var buffer = new byte[2];
         stream.Seek(offset, origin);
         stream.ReadExactly(buffer);
-        if (!BitConverter.IsLittleEndian) Array.Reverse(buffer);
+        switch (BitConverter.IsLittleEndian)
+        {
+            case false when endian.Equals(Endian.Little):
+            case true when endian.Equals(Endian.Big):
+                Array.Reverse(buffer);
+                break;
+        }
         return BitConverter.ToUInt16(buffer);
     }
     
