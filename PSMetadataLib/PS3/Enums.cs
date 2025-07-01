@@ -39,13 +39,13 @@ public enum AttributeEnum : uint
     PlayStationEyeWarning = 1<<10,
     MoveCalibrationNotification = 1<<11,
     Stereoscopic3DWarning = 1<<12,
-    InstallDisc = 1<<17,
-    InstallPackages = 1<<18,
-    GamePurchaseEnabled = 1<<20,
-    PCEngine = 1<<22,
-    LicenseLogoDisabled = 1<<23,
-    MoveControllerEnabled = 1<<24,
-    NeoGeo = PCEngine | 1<<27,
+    InstallDisc = 1<<16,
+    InstallPackages = 1<<17,
+    GamePurchaseEnabled = 1<<19,
+    PCEngine = 1<<21,
+    LicenseLogoDisabled = 1<<22,
+    MoveControllerEnabled = 1<<23,
+    NeoGeo = PCEngine | 1<<26,
 }
 
 [Flags]
