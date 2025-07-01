@@ -99,9 +99,9 @@ public enum PS3ParamCategoryEnum : short
     [ShortName("AR")]
     AutoinstallRoot,
     [ShortName("DP")]
-    DiscPackages,
-    [ShortName("IP")]
-    InstallPackages,
+    DiscPackage,
+    [ShortName("IP"), Description("Install Package")]
+    InstallPackage,
     [ShortName("TR")]
     ThemeRoot,
     [ShortName("VR")]
