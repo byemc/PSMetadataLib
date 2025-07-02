@@ -254,7 +254,7 @@ public class PS3ParamSFO : SfoFile
     {
         get => (string?)Entries.GetValueOrDefault("SUB_TITLE")?.Value;
         set => SaveStringToEntries("SUB_TITLE", value, s => s.Length < 128,
-            "SUB_TITLE must be less than 128 characters long.");
+            "SUB_TITLE must be less than 128 characters long.", maxLength:0x080);
     }
     
     /**
@@ -277,6 +277,16 @@ public class PS3ParamSFO : SfoFile
         set => SaveStringToEntries("TITLE_ID", value, s => s.Length < 16,
             "TITLE_ID must be less than 16 characters long.");
     }
+
+    /**
+     * Revision of the disc or package. XX.YY format. Mapped to VERSION.
+     */
+    public string? Version
+    {
+        get => (string?)Entries.GetValueOrDefault("VERSION")?.Value;
+        set => SaveStringToEntries("VERSION", value, v => v.Length == 5 && IsMatch(v, _appVerRegex.Pattern),
+            "VERSION must be 5 characters long and in the format XX.YY.", maxLength:0x8);
+    }
     
     /**
      * Create PS3ParamSFO file using information from a PARAM.SFO file given in `path`
@@ -290,5 +300,10 @@ public class PS3ParamSFO : SfoFile
         {
             throw new FileLoadException("Could not find any parameters in the PARAM.SFO file.");
         }
+    }
+
+    public PS3ParamSFO()
+    {
+        
     }
 }
