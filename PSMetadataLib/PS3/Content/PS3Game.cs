@@ -1,6 +1,3 @@
-using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
-
 namespace PSMetadataLib.PS3.Content;
 
 /**
