@@ -4,12 +4,12 @@ PSMetadataLib
 PSMetadataLib is a work-in-progress library for parsing files related to metadata on PlayStation systems, currently focused on the PlayStation 3.
 
 The following is planned for the short term:
-- [~] PlayStation 3 support
+- [-] PlayStation 3 support
     - [X] Properly parse, modify and write PARAM.SFO files
-    - [ ] Properly parse, modify and write PS3_DISK.SFB files
-    - [ ] Identify assets related to the current PARAM.SFO file.
-        - [ ] Images (like PIC1.PNG, ICON0.PNG, etc)
-        - [ ] Audio / Video (SND0.AT3, etc)
+    - [-] Properly parse, modify and write PS3_DISK.SFB files
+    - [X] Identify assets related to PS3 content.
+        - [X] Images (like PIC1.PNG, ICON0.PNG, etc)
+        - [X] Audio / Video (SND0.AT3, etc)
 
 Implementing the above will also help with parsing related files on PSP, PS Vita and PS4. In the long term I hope to support all metadata-related things across all PlayStation generations (pending checking what I can even do for PSX/PS2.. save data maybe?)
 
