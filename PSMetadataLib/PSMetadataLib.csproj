@@ -4,6 +4,13 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        
+        <PackageId>PSMetadataLib</PackageId>
+        <PackageVersion>0.1.0-alpha2</PackageVersion>
+        <Description>A .NET library for parsing metadata related to PlayStation systems. Currently focused on PlayStation 3 only.</Description>
+        <Authors>Bye</Authors>
+        <PackageProjectUrl>https://shinonome.rocks/bye/PSMetadataLib</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
 </Project>
