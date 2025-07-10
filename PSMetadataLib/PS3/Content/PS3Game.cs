@@ -35,6 +35,8 @@ public class PS3Game : PS3Software
     public List<PS3InstallPackage> Packages {
         get
         {
+            if (!Directory.Exists(Path.Join(Location, "PKGDIR")))
+                return [];
             var results = Directory.GetDirectories(Path.Join(Location, "PKGDIR"), "PKG??");
             List<PS3InstallPackage> output = [];
             output.AddRange(results.Select(result => new PS3InstallPackage(result)));

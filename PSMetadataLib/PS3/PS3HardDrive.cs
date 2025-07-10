@@ -21,6 +21,8 @@ public class PS3HardDrive : IPS3Directory
             
             hddGames.Add(IPS3Content.CreateContentFromPath(hddGamePath));
         }
+        
+        output.AddRange(hddGames);
 
         return output;
     }
