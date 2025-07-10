@@ -34,11 +34,6 @@ public class PS3Software : PS3Content
     }
 
     /**
-     * REQUIRED: Specifies the category of the content.
-     */
-    public PS3ParamCategoryEnum Category => ParamSfo.Category ?? PS3ParamCategoryEnum.HddGame;
-
-    /**
      * OPTIONAL
      */
     public string? ContentId

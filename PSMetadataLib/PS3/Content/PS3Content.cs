@@ -46,6 +46,11 @@ public class PS3Content : IPS3Content
         set => ParamSfo.Attribute = value;
     }
     
+    /**
+     * REQUIRED: Specifies the category of the content.
+     */
+    public PS3ParamCategoryEnum Category => ParamSfo.Category ?? PS3ParamCategoryEnum.HddGame;
+    
     internal PS3ParamSFO ParamSfo;
 
     public PS3Content(string path)

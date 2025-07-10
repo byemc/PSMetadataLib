@@ -24,7 +24,22 @@ public class Program
             Environment.Exit(99);
         }
 
-        if (!Path.Exists(Path.Join(path, "PARAM.SFO"))) return;
+        if (
+            !File.Exists(Path.Join(path, "PARAM.SFO")) &&
+            !Directory.Exists(Path.Join(path, "dev_hdd0"))
+            )
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("[!] Please provide a path to PS3 content.");
+            Environment.Exit(99);
+        }
+
+        if (Directory.Exists(Path.Join(path, "dev_hdd0")))
+        {
+            var filesystem = new PS3RootFilesystem(path);
+            FileSystemReader.Main(filesystem);
+            return;
+        }
         
         // Attempt to load the SFO file.
         var tmp = new PS3ParamSFO(Path.Join(path, "PARAM.SFO"));

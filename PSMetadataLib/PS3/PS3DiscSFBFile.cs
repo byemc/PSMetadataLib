@@ -67,6 +67,13 @@ public class PS3DiscSFBFile
         }
     }
 
+    public List<string> GetExistingSfoLocations(string basePath)
+    {
+        List<string> output = [];
+        output.AddRange(from location in SfoLocations where File.Exists(Path.Join(basePath, location)) select Path.Join(basePath, location));
+        return output;
+    }
+
     public string TitleId { get; private set; }
     public string DiscVersion { get; private set; } = "";
 
