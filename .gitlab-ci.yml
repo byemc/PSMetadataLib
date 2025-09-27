@@ -1,0 +1,17 @@
+default:
+  image: "mcr.microsoft.com/dotnet/sdk:9.0-noble"
+
+stages:
+    - deploy
+
+deploy:
+    stage: deploy
+    script:
+        # Build the package in Release configuration
+        - dotnet pack PSMetadataLib -c Release  /p:Version=${CI_COMMIT_TAG} /p:PackageVersion=${CI_COMMIT_TAG}
+        # Configure GitLab package registry as a NuGet source
+        - dotnet nuget add source "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/nuget/index.json" --name gitlab --username gitlab-ci-token --password $CI_JOB_TOKEN --store-password-in-clear-text
+        # Push the package to the project's package registry
+        - dotnet nuget push "PSMetadataLib/bin/Release/*.nupkg" --source gitlab
+    rules:
+        - if: $CI_COMMIT_TAG
