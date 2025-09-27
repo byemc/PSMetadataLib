@@ -26,6 +26,18 @@ public static class Misc
         }
         return BitConverter.ToUInt32(buffer);
     }
+
+    public static uint[] ReadUInt32Array(FileStream stream, int offset, int length,
+        SeekOrigin origin = SeekOrigin.Begin, Endian endian = Endian.Little)
+    {
+        var output = new uint[length];
+        for (var i = 0; i < length; i++)
+        {
+            output[i] = (uint)ReadUInt32(stream, offset + (i * 0x04));
+        }
+
+        return output;
+    }
     
     public static ushort ReadUInt16(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin, Endian endian = Endian.Little)
     {
@@ -40,6 +52,22 @@ public static class Misc
                 break;
         }
         return BitConverter.ToUInt16(buffer);
+    }
+
+    public static byte ReadByte(FileStream stream, int offset, SeekOrigin origin = SeekOrigin.Begin,
+        Endian endian = Endian.Little)
+    {
+        var buffer = new byte[1];
+        stream.Seek(offset, origin);
+        stream.ReadExactly(buffer);
+        switch (BitConverter.IsLittleEndian)
+        {
+            case false when endian.Equals(Endian.Little):
+            case true when endian.Equals(Endian.Big):
+                Array.Reverse(buffer);
+                break;
+        }
+        return buffer[0];
     }
     
     // Reads a string of known length from a file.

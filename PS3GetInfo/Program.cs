@@ -1,8 +1,8 @@
 ﻿// Gets information about given PS3 content.
 
-using PS3GetInfo;
-using PSMetadataLib.Filetypes;
 using PSMetadataLib.PS3;
+
+namespace PS3GetInfo;
 
 public class Program
 {
@@ -15,7 +15,8 @@ public class Program
             Environment.Exit(98);
         }
         
-        var path = args.FirstOrDefault();
+        var path = args.FirstOrDefault() ?? "";
+        var pathLc = path.ToLower();
         
         if (!Path.Exists(path))
         {
@@ -25,12 +26,12 @@ public class Program
         }
 
         if (
-            !Path.GetFileName(path).Equals("PARAM.SFO") &&
-            !Path.GetFileName(path).Equals("PS3_DISC.SFB") &&
-            !File.Exists(Path.Join(path, "PARAM.SFO")) &&
-            !File.Exists(Path.Join(path, "PS3_DISC.SFB")) &&
-            !Directory.Exists(Path.Join(path, "dev_hdd0"))
-            )
+            !Path.GetFileName(pathLc).Equals("param.sfo") &&
+            !Path.GetFileName(pathLc).Equals("ps3_disc.sfb") &&
+            !File.Exists(Path.Join(pathLc, "param.sfo")) &&
+            !File.Exists(Path.Join(pathLc, "ps3_disc.sfb")) &&
+            !Directory.Exists(Path.Join(pathLc, "dev_hdd0"))
+        )
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("[!] Please provide a path to PS3 content. (Invalid path provided)");
@@ -45,10 +46,9 @@ public class Program
         }
 
         // Attempt to load the SFO file.
-        if (Path.GetFileName(path).Equals("PARAM.SFO") || File.Exists(Path.Join(path, "PARAM.SFO")))
+        if (Path.GetFileName(pathLc).Equals("param.sfo") || File.Exists(Path.Join(pathLc, "param.sfo")))
         {
-            var toJoin = Path.GetFileName(path).Equals("PARAM.SFO") ? "" : "PARAM.SFO";
-            var tmp = new PS3ParamSFO(Path.Join(path, toJoin));
+            var tmp = new PS3ParamSFO(path);
 
             if (tmp.Category is PS3ParamCategoryEnum.HddGame or PS3ParamCategoryEnum.DiscGame)
             {

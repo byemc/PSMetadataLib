@@ -36,6 +36,6 @@ foreach (var key in sfo.Entries.Keys)
     }
     
     Console.Write(
-        $"{key,20}\t{value,-50}");
+        $"{key,20}\t{value,-50}\t{value}");
     Console.Write("\n");
 }

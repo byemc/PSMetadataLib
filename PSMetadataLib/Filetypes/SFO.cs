@@ -72,6 +72,7 @@ public class SfoFile
     public Dictionary<string, SFOParamValue> Entries { get; private set; } = [];
 
     private readonly byte[] _magicSignature = "\0PSF"u8.ToArray(); // This is what's expected to be in the header.
+    private readonly uint _expectedVersion = 0x00000101;
     
     protected void SaveValueToEntries(string key, SFOParamValue? value)
     {
@@ -121,6 +122,12 @@ public class SfoFile
         if (!magic.SequenceEqual(_magicSignature))
         {
             throw new BadMagicSignatureException("File passed into SFO parser is not a valid SFO file. (Header doesn't match)");
+        }
+
+        var version = Misc.ReadUInt32(fs, 0, SeekOrigin.Current);
+        if (version != _expectedVersion)
+        {
+            throw new Exception($"File passed into SFO parser is not of version '1.1'. (Expected {_expectedVersion}, got {version})");
         }
 
         var keyTableStart = Misc.ReadUInt32(fs, 0x08); // Where the key table starts.
@@ -178,7 +185,7 @@ public class SfoFile
         // Header
         List<byte> header = [];
         header.AddRange(_magicSignature);
-        header.AddRange([0x01, 0x01, 0x00, 0x00]);      // 1.01
+        header.AddRange([0x01, 0x01, 0x00, 0x00]);      // 1.1
         var tablesEntries = (uint)Length;
         
         // The tables
