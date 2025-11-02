@@ -15,3 +15,6 @@ Here is where I'm mirroring the repository myself, and where issues and merge re
 
 - [shinonome.rocks/bye/psmetadatalib](https://shinonome.rocks/bye/psmetadatalib) [upstream]
 - [github/byemc/psmetadatalib](https://github.com/byemc/PSMetadataLib)
+
+>[!NOTE]
+>Development is primarily performed on shinonome.rocks. GitHub is provided as an easy way to contribute code changes via pull requests or to report issues. 
