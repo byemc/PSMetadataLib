@@ -11,8 +11,7 @@ I would like to thank the contributors of the PlayStation Developer Wiki (https:
 
 ## Mirrors
 
-This repository is officially mirrored to several places.
+Here is where I'm mirroring the repository myself, and where issues and merge requests should go. 
 
 - [shinonome.rocks/bye/psmetadatalib](https://shinonome.rocks/bye/psmetadatalib) [upstream]
-- [tangled : @bye.omg.lol/PSMetadataLib](https://tangled.org/@bye.omg.lol/PSMetadataLib/) (updates with upstream automatically)
-- [github/byemc/psmetadatalib](https://github.com/byemc/PSMetadataLib) (likely to be out of date.)
+- [github/byemc/psmetadatalib](https://github.com/byemc/PSMetadataLib)
