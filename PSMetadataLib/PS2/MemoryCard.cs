@@ -6,7 +6,6 @@ using PSMetadataLib.PS2.Enums;
 namespace PSMetadataLib.PS2;
 
 // VERY useful!! http://www.csclub.uwaterloo.ca:11068/mymc/ps2mcfs.html
-
 public class MemoryCard
 {
     private const string _magic = "Sony PS2 Memory Card Format ";
@@ -16,10 +15,12 @@ public class MemoryCard
     public string Version { get; private set; }
     public ushort PageSize { get; private set; }
 
-    public ushort FullPageSize
+    public ushort TotalPageSize
     {
         get => (ushort)(PageSize + ECCSize);
     }
+
+    public List<MemoryCardCluster> Clusters;
 
     public ushort PagesPerCluster { get; private set; }
     public ushort PagesPerBlock { get; private set; }
@@ -33,9 +34,6 @@ public class MemoryCard
     public uint[] BadBlockTable { get; private set; }
     public uint CardType { get; private set; }
     public MemoryCardFlagsEnum CardFlags { get; private set; }
-
-    public MemoryCardDirectory? RootDirectory { get; set; }
-
 
     protected void Load()
     {
@@ -63,33 +61,50 @@ public class MemoryCard
         CardType = Misc.ReadByte(fs, 0x000150);
         CardFlags = (MemoryCardFlagsEnum)Misc.ReadByte(fs, 0x000151);
 
+        Clusters = new List<MemoryCardCluster>();
+        
         if (CardType != 2)
             throw new Exception("File given wasn't a PS2 Memory Card.");
+
+        for (var i = 0; i < ClustersTotal; i++)
+        {
+            Clusters.Add(ReadCluster(fs, (uint)i));
+        }
     }
 
-    public byte[] ReadPage(FileStream fs, uint pageNumber)
+    public MemoryCardFATEntry GetFATEntry(uint index)
     {
-        var buffer = new byte[FullPageSize];
-        fs.Seek(pageNumber * FullPageSize, SeekOrigin.Begin);
-        fs.ReadExactly(buffer);
-        return buffer;
+        var fatOffset = index % 256;
+        var indirectIndex = index / 256;
+        var indirectOffset = indirectIndex % 256;
+        double dblIndirectIndex = indirectIndex / 256;
+        var indirectClusterNum = IndirectFatTable[(int)dblIndirectIndex];
+        var indirectCluster = ReadCluster(indirectClusterNum);
+        var fatClusterNum = indirectCluster.Data[(int)indirectOffset];
+        var fatCluster = ReadCluster(fatClusterNum);
+        return new MemoryCardFATEntry(fatCluster.Data[fatOffset]);
     }
 
-    public byte[] ReadCluster(FileStream fs, uint clusterNumber)
+    public MemoryCardPage ReadPage(uint number)
     {
-        var buffer = new byte[FullPageSize * PagesPerCluster];
-        var offset = clusterNumber > 0 ? 0 : 0;
-        fs.Seek(((clusterNumber * PagesPerCluster) * FullPageSize) + offset, SeekOrigin.Begin);
-        fs.ReadExactly(buffer);
-        return buffer;
+        using var fs = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.None);
+        return ReadPage(fs, number);
     }
 
-    public byte[] ReadBlock(FileStream fs, uint blockNumber)
+    private MemoryCardPage ReadPage(FileStream fs, uint number)
     {
-        var buffer = new byte[FullPageSize * PagesPerBlock];
-        fs.Seek((blockNumber * PagesPerBlock) * FullPageSize, SeekOrigin.Begin);
-        fs.ReadExactly(buffer);
-        return buffer;
+        return new MemoryCardPage(fs, number, PageSize, ECCSize);
+    }
+    
+    private MemoryCardCluster ReadCluster(FileStream fs, uint number)
+    {
+        return new MemoryCardCluster(fs, number, PagesPerCluster, PageSize, ECCSize);
+    }
+    
+    public MemoryCardCluster ReadCluster(uint number)
+    {
+        using var fs = new FileStream(Path, FileMode.Open, FileAccess.Read, FileShare.None);
+        return ReadCluster(fs, number);
     }
 
     public MemoryCard(string file)
@@ -99,106 +114,104 @@ public class MemoryCard
     }
 }
 
-public class MemoryCardDirectory
+public class MemoryCardFATEntry(uint entry)
 {
-    public List<MemoryCardDirectoryEntry> Entries = [];
+    private uint AllocatedBitMask = 0x80000000;
+    
+    public bool IsFree { get; set; } = (entry << 31) >> 31 != 1;
+    public uint NextCluster { get; set; } = (entry >> 1);
+    public uint OriginalEntry = entry;
+}
 
-    public MemoryCardDirectory(Stream directoryStream)
+public class MemoryCardPage
+{
+    public byte[] Data { get; } = new byte[512];
+    public byte[] ECC { get; } = new byte[16];
+
+    public MemoryCardPage(byte[] data, byte[] ecc)
     {
+        Data = data;
+        ECC = ecc;
+    }
+
+    public MemoryCardPage(Stream fs, uint number = 0, uint pageLength = 512, uint eccLength = 16)
+    {
+        var dataBuffer = new byte[pageLength];
+        var eccBuffer = new byte[eccLength];
+        var pageTotalLength = pageLength + eccLength;
+        // var willOverflow = (pageTotalLength * (number + 1)) > fs.Length;
+        
+        // if (willOverflow)
+        //     Console.WriteLine($"WARNING WILL OVERFLOW LENGTH {fs.Length} POS {pageTotalLength * (number)} NUM {number} / {fs.Length / pageTotalLength}");
+        
+        fs.Seek(pageTotalLength * number, SeekOrigin.Begin);
+        fs.Read(dataBuffer, 0, (int)pageLength);
+        fs.Read(eccBuffer,  0, (int)eccLength);
+
+        Data = dataBuffer;
+        ECC = eccBuffer;
     }
 }
 
-public class MemoryCardDirectoryEntry
+public class MemoryCardCluster
 {
-    public MemoryCardDirectoryMode Mode { get; set; }
-    public uint Length { get; private set; }
-    public MemoryCardDateTime CreationTime { get; private set; } = new(0);
-    public MemoryCardDateTime ModifiedTime { get; private set; } = new(0);
-    public uint Cluster { get; set; }
-    public uint? DirEntry { get; set; }
-    public uint? Attr { get; set; }
-    public string Name { get; set; }
+    public readonly List<MemoryCardPage> Pages = [];
+    private uint PagesPerChunk { get; } = 2;
+    private uint PageLength { get; } = 512;
+    private uint ECCLength { get; } = 16;
 
-    public MemoryCardDirectoryEntry(Stream directoryEntryStream)
-    {
-    }
-}
-
-public class MemoryCardDateTime
-{
-    public ulong Timestamp { get; set; }
-
-    public byte Seconds
-    {
-        get { return BitConverter.GetBytes(Timestamp)[1]; }
-        set
-        {
-            var bytes = BitConverter.GetBytes(Timestamp);
-            bytes[1] = value;
-            Timestamp = BitConverter.ToUInt64(bytes);
-        }
-    }
-
-    public byte Minutes
-    {
-        get { return BitConverter.GetBytes(Timestamp)[2]; }
-        set
-        {
-            var bytes = BitConverter.GetBytes(Timestamp);
-            bytes[2] = value;
-            Timestamp = BitConverter.ToUInt64(bytes);
-        }
-    }
-
-    public byte Hours
-    {
-        get { return BitConverter.GetBytes(Timestamp)[3]; }
-        set
-        {
-            var bytes = BitConverter.GetBytes(Timestamp);
-            bytes[3] = value;
-            Timestamp = BitConverter.ToUInt64(bytes);
-        }
-    }
-
-    public byte Day
-    {
-        get { return BitConverter.GetBytes(Timestamp)[4]; }
-        set
-        {
-            var bytes = BitConverter.GetBytes(Timestamp);
-            bytes[4] = value;
-            Timestamp = BitConverter.ToUInt64(bytes);
-        }
-    }
-
-    public byte Month
-    {
-        get { return BitConverter.GetBytes(Timestamp)[5]; }
-        set
-        {
-            var bytes = BitConverter.GetBytes(Timestamp);
-            bytes[5] = value;
-            Timestamp = BitConverter.ToUInt64(bytes);
-        }
-    }
-
-    public int Year
+    public byte[] Data
     {
         get
         {
-            var bytes = BitConverter.GetBytes(Timestamp);
-            byte[] output = [bytes[6], bytes[7]];
-            return BitConverter.ToInt32(output);
-        }
-        set
-        {
-            var nop = value;
+            var buffer = new List<byte>();
+            foreach (var memoryCardPage in Pages)
+            {
+                buffer.AddRange(memoryCardPage.Data);
+                buffer.AddRange(memoryCardPage.ECC);
+            }
+
+            return buffer.ToArray();
         }
     }
 
-    public MemoryCardDateTime(ulong timestamp)
+    public MemoryCardCluster(List<MemoryCardPage> pages)
     {
-        Timestamp = timestamp;
+        Pages = pages;
+    }
+    
+    public MemoryCardCluster(Stream fs, uint number = 0, uint pagesPerChunk = 2, uint pageLength = 512,
+        uint eccLength = 16)
+    {
+        PagesPerChunk = pagesPerChunk;
+        PageLength = pageLength;
+        ECCLength = eccLength;
+        for (var i = 0; i < pagesPerChunk; i++)
+        {
+            var page = new MemoryCardPage(fs, (uint)(i + (number * pagesPerChunk)), pageLength,
+                eccLength);
+            Pages.Add(page);
+        }
+    }
+}
+
+public class MemoryCardBlock
+{
+    public MemoryCardPage[] Pages;
+
+    public MemoryCardBlock(MemoryCardPage[] pages)
+    {
+        Pages = pages;
+    }
+    
+    public MemoryCardBlock(Stream fs, uint number = 0, uint pagesPerBlock = 16, uint pageLength = 512,
+        uint eccLength = 16)
+    {
+        var buffer = new MemoryCardPage[pagesPerBlock];
+        for (uint i = 0; i < pagesPerBlock; i++)
+        {
+            buffer[i] = new MemoryCardPage(fs, (uint)(number * pagesPerBlock * (pageLength + eccLength)), pageLength,
+                eccLength);
+        }
     }
 }
