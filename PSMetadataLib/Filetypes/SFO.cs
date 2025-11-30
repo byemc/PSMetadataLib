@@ -101,9 +101,8 @@ public class SfoFile
             Entries.Remove(key);
     }
 
-    protected SfoFile()
+    public SfoFile()
     {
-        
     }
     
     public SfoFile(string file)
