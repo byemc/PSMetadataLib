@@ -1,15 +1,18 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
+using static System.Text.RegularExpressions.Regex;
 using PSMetadataLib.Filetypes;
 using PSMetadataLib.PS4.Enums;
 using PSMetadataLib.Types;
 
 namespace PSMetadataLib.PS4;
 
-/**
- * Represents a PlayStation 4 PARAM.SFO file.
- *
- * Much of the details for the fields and properties of this class are thanks to the PS Developer Wiki: https://www.psdevwiki.com/ps4/param.sfo
- */
+/// <summary>
+/// Represents a PlayStation 4 PARAM.SFO file. <br />
+/// Much of the details for the fields and properties of this class are thanks to the PS Developer Wiki: https://www.psdevwiki.com/ps4/param.sfo
+/// </summary>
+/// <seealso cref="SfoFile" />
+/// <remarks>This is unfinished!!</remarks>
 public class PS4ParamSFO : SfoFile
 {
     /**
@@ -41,21 +44,29 @@ public class PS4ParamSFO : SfoFile
             : null;
         set => SaveValueToEntries("APP_TYPE", (uint?)value);
     }
+    
+    public string? AppVer
+    {
+        get => (string?)Entries.GetValueOrDefault("APP_VER")?.Value;
+        set => SaveStringToEntries("APP_VER", value, v => v.Length == 5 && IsMatch(v, _appVerRegex.Pattern),
+            "APP_KEY must be 5 characters long and in the format XX.YY.", maxLength:0x8);
+    }
+    private readonly GeneratedRegexAttribute _appVerRegex = new GeneratedRegexAttribute(@"/\d{2}[.]\d{2}/");
 
     public AttributeEnum? Attribute
     {
-        get => Entries.TryGetValue("APP_TYPE", out var fmt)
+        get => Entries.TryGetValue("ATTRIBUTE", out var fmt)
             ? (AttributeEnum)fmt.Value
             : null;
-        set => SaveValueToEntries("APP_TYPE", (uint?)value);
+        set => SaveValueToEntries("ATTRIBUTE", (uint?)value);
     }
 
     public Attribute2Enum? Attribute2
     {
-        get => Entries.TryGetValue("APP_TYPE", out var fmt)
+        get => Entries.TryGetValue("ATTRIBUTE2", out var fmt)
             ? (Attribute2Enum)fmt.Value
             : null;
-        set => SaveValueToEntries("APP_TYPE", (uint?)value);
+        set => SaveValueToEntries("ATTRIBUTE2", (uint?)value);
     }
 
     public CategoryEnum? Category
@@ -86,10 +97,8 @@ public class PS4ParamSFO : SfoFile
         return (CategoryEnum)unboxedValue;
     }
 
-    public ContentId? ContentId
-    {
-        get { return new ContentId((string?)Entries.GetValueOrDefault("CONTENT_ID")?.Value); }
-    }
+    // TODO: Allow setting
+    public ContentId? ContentId => new((string?)Entries.GetValueOrDefault("CONTENT_ID")?.Value);
 
     public string? Version
     {
