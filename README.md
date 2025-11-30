@@ -1,20 +1,22 @@
 PSMetadataLib
 =============
 
-PSMetadataLib is a work-in-progress library for parsing files related to metadata on PlayStation systems, currently focused on the PlayStation 3.
-
-The following is planned for the short term:
-- [-] PlayStation 3 support
-    - [X] Properly parse, modify and write PARAM.SFO files
-    - [-] Properly parse, modify and write PS3_DISK.SFB files
-    - [X] Identify assets related to PS3 content.
-        - [X] Images (like PIC1.PNG, ICON0.PNG, etc)
-        - [X] Audio / Video (SND0.AT3, etc)
-
-Implementing the above will also help with parsing related files on PSP, PS Vita and PS4. In the long term I hope to support all metadata-related things across all PlayStation generations (pending checking what I can even do for PSX/PS2.. save data maybe?)
+PSMetadataLib is a work-in-progress library for parsing files related to metadata on PlayStation systems, currently focused on the PlayStation 3. Support for basic PS4 and PS5 formats is being worked on, as is support for PS2 Memory Cards.
 
 A use case of this could be identifying PlayStation games without using an internet connection, using the data provided by the game directly.
 
 This project is licensed under the MIT license. Please see more details in the LICENSE.txt file.
 
-I would like to thank the contributors of the PS3 Dev Wiki (https://www.psdevwiki.com/ps3/) for documenting so much about the file formats PlayStation systems use.
+I would like to thank the contributors of the PlayStation Developer Wiki (https://www.psdevwiki.com/) for documenting so much about the file formats PlayStation systems use.
+
+## Mirrors
+
+Here is where I'm mirroring the repository myself, and where issues and merge requests should go. 
+
+- [shinonome.rocks/bye/psmetadatalib](https://shinonome.rocks/bye/psmetadatalib) [upstream]
+- [github/byemc/psmetadatalib](https://github.com/byemc/PSMetadataLib)
+
+> [!note]
+> Development is primarily performed on shinonome.rocks. GitHub is provided as an easy way to contribute code changes via pull requests or to report issues. 
+> Code updates to shinonome.rocks will be mirrored instantly to GitHub, but code updates to GitHub may take time to sync to shinonome.rocks.
+
